@@ -1,0 +1,75 @@
+.walletCard {
+    text-align: left;
+    width: 100%; /* Changed from 50% to full width for better responsiveness */
+    margin: auto;
+    border-radius: 10px;
+    background-color: #A1C6EA;
+    box-shadow: 0.2em 0.2em 0 0.2em rgba(0,0,0,0.17);
+}
+
+.walletCard h3 {
+    margin-left:1em;
+    margin-bottom: 1em;
+    margin-top: 1em;
+}
+
+.interactionsCard {
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* Changed from 50% to full width for better responsiveness */
+    margin: auto;
+    padding-bottom: 1em;
+    border-radius: 10px;
+    background-color: #507DBC;
+    box-shadow: 0.2em 0.2em 0 0.2em rgba(0,0,0,0.17);
+}
+
+.addressInput {
+    width: 90%; /* Increased width for better alignment */
+    margin: auto; /* Center the input field */
+    display: block; /* Make the input block level */
+}
+
+.button6 {
+    border: none;
+    padding: 0.7em 1.4em;
+    margin: 1em auto; /* Center the button */
+    display: block; /* Make the button block level */
+    border-radius: 0.15em;
+    box-sizing: border-box;
+    text-decoration: none;
+    font-family: 'Roboto', sans-serif; /* Changed font for better readability */
+    text-transform: uppercase;
+    font-weight: 400;
+	color: #FFFFFF;
+background-color: #04080F;
+box-shadow: inset 0 -0.6em 0 -0.35em rgba(0,0,0,0.17);
+cursor: pointer; /* Add a cursor to indicate clickable /
+text-align: center; / Center the text inside the button */
+}
+
+.providersTable {
+width: 100%; /* Take full width of the parent container /
+margin-top: 20px; / Add some spacing from the top */
+}
+
+.providersTable th,
+.providersTable td {
+border: 1px solid #ddd;
+padding: 12px; /* Increase padding for better spacing /
+text-align: center; / Center text for better readability */
+}
+
+.providersTable th {
+background-color: #004085;
+color: white;
+}
+
+/* Ensure that the table is responsive and looks good on all devices /
+@media screen and (max-width: 768px) {
+.addressInput, .button6, .providersTable {
+width: 95%; / Adjust width for small screens /
+margin: 10px auto; / Adjust margin for small screens */
+.providersTable, .providersTable th, .providersTable td {
+    font-size: 0.8em; /* Adjust font size for small screens */
+}
