@@ -1,6 +1,8 @@
 import { React, useState } from 'react';
 import styles from './USD.module.css';
 import Web3 from 'web3';
+import {ethers} from 'ethers'
+
 
 // And later in the code
 const web3 = new Web3(window.ethereum);
@@ -32,97 +34,6 @@ const handleTextBoxChange = (provider, name, value) => {
 	}));
 	};
 
-  // Use the data from textBoxValues to submit jobs
-  const submitJobHandler = async () => {
-    for (const selectedProviderArray of Object.keys(selectedProviders)) {
-		// Create an array of promises
-		let promises = [0, 1, 2, 3, 4, 5].map((i) => secondContract.getProviderInfo(selectedProviderArray, i));
-
-		// Use Promise.all to wait for all promises to resolve
-		let providerData = await Promise.all(promises);
-
-		const textBoxData = textBoxValues[selectedProviderArray] || {};
-
-		let isProviderNull = selectedProviderArray;
-
-        if (!isProviderNull || !providerData[0]) continue; // or handle error
-
-        const jobPrice = 
-		 providerData[2].toString() * 10 + 
-          10 * providerData[5].toString() + 
-          (10 + 11) * providerData[3].toString();
-
-        const args = {
-          provider: selectedProviderArray,
-          priceBlockIndex: 0, // assuming this is static
-          cloudStorageID: [0], // assuming this is static
-          cachetype: [0], // assuming this is static
-          dataPricesSetBlockNum: [0], // assuming this is static
-          core: [textBoxData.Cores || 0],
-          runTime: [textBoxData.RunTime || 0],
-          dataTransferOut: textBoxData.DataTransferOut || 0,
-          jobPrice: jobPrice.toString(),
-          workflowId: 0 // assuming this is static
-        };
-
-        try {
-          // Convert args to the required types
-          const contractArgs = {
-            key: textBoxData.IPFS_hash,
-            dataTransferIn: [textBoxData.DataTransferIn || 0],
-            args:
-              [
-                args.provider,
-                args.priceBlockIndex,
-                args.cloudStorageID,
-                args.cachetype,
-                args.dataPricesSetBlockNum,
-                args.core,
-                args.runTime,
-                args.dataTransferOut,
-                args.jobPrice,
-                args.workflowId
-              ],
-            storageDuration: [0], // assuming this is static
-            sourceCodeHash: [web3.utils.keccak256(textBoxData.IPFS_hash)]
-          };
-
-		  const result = await contract.submitJob(
-			contractArgs.key,
-			contractArgs.dataTransferIn,
-			contractArgs.args,
-			contractArgs.storageDuration,
-			contractArgs.sourceCodeHash
-		  ).send({ from: "0x06FFb2c253450680d8614524466740f9576ED93F" , gasLimit: 9900000}); // user's Metamask address
-		console.log(result);
-        } catch (error) {
-          console.error('Error submitting job for 0x06FFb2c253450680d8614524466740f9576ED93F', error);
-        }
-      
-    }
-  };
-
-  const getJobInfoHandler = async (provider, key, index, jobID) => {
-	setOperation('getJobInfoHandler');
-	setResultString('Waiting...');
-	try {
-	  // You need to convert index and jobID from string to their respective types
-	  const parsedIndex = parseInt(index, 10);
-	  const parsedJobID = parseInt(jobID, 10);
-	  console.log("provider", provider);
-	  console.log("key", key);
-	  console.log("parsedIndex", parsedIndex);
-	  console.log("parsedJobID", parsedJobID);
-	  let txt = await contract.getJobInfo(provider, key, parsedIndex, parsedJobID);
-	  setResultString(JSON.stringify(txt)); // Assuming you want to display the returned object as a string
-	} catch (error) {
-	  const errorMessage = error.message.toString();
-	  const match = errorMessage.match(/reason="([^"]*)"/);
-	  const extractedErrorMessage = match ? match[1] : errorMessage;
-	  setResultString(extractedErrorMessage);
-	}
-  };
-
   const doesProviderExistHandler = async (e) => {
     e.preventDefault();
     setOperation('doesProviderExistHandler');
@@ -138,6 +49,40 @@ const handleTextBoxChange = (provider, name, value) => {
     }
   };
 
+  const doesRequesterExistHandler = async (e) => {
+    e.preventDefault();
+    setOperation('doesRequesterExistHandler');
+    setResultString('Waiting...');
+    try {
+      let txt = await contract.doesRequesterExist(e.target.requester.value);
+      setResultString(txt.toString());
+    } catch (error) {
+      const errorMessage = error.message.toString();
+      const match = errorMessage.match(/reason="([^"]*)"/);
+      const extractedErrorMessage = match ? match[1] : errorMessage;
+      setResultString(extractedErrorMessage);
+    }
+  };
+
+  const getProviderInfoHandler = async (currentProvider) => {
+    try {
+      // Create an array of promises
+      let promises = [0, 1, 2, 3, 4, 5].map((i) => secondContract.getProviderInfo(currentProvider, i));
+
+      // Use Promise.all to wait for all promises to resolve
+      let txt = await Promise.all(promises);
+
+      console.log(txt);
+      console.log(txt.toString());
+      return txt.join(',');
+    } catch (error) {
+      const errorMessage = error.message.toString();
+      const match = errorMessage.match(/reason="([^"]*)"/);
+      const extractedErrorMessage = match ? match[1] : errorMessage;
+      return extractedErrorMessage;
+    }
+  };
+  
   const getProvidersHandler = async (e) => {
     e.preventDefault();
     setOperation('getProvidersHandler');
@@ -199,24 +144,143 @@ const handleTextBoxChange = (provider, name, value) => {
     }
   };
 
-  const getProviderInfoHandler = async (currentProvider) => {
-    try {
-      // Create an array of promises
-      let promises = [0, 1, 2, 3, 4, 5].map((i) => secondContract.getProviderInfo(currentProvider, i));
+  // Use the data from textBoxValues to submit jobs
+  const submitJobHandler = async () => {
+    for (const selectedProviderArray of Object.keys(selectedProviders)) {
+		// Create an array of promises
+		let promises = [0, 1, 2, 3, 4, 5].map((i) => secondContract.getProviderInfo(selectedProviderArray, i));
 
-      // Use Promise.all to wait for all promises to resolve
-      let txt = await Promise.all(promises);
+		// Use Promise.all to wait for all promises to resolve
+		let providerData = await Promise.all(promises);
 
-      console.log(txt);
-      console.log(txt.toString());
-      return txt.join(',');
-    } catch (error) {
-      const errorMessage = error.message.toString();
-      const match = errorMessage.match(/reason="([^"]*)"/);
-      const extractedErrorMessage = match ? match[1] : errorMessage;
-      return extractedErrorMessage;
+		const textBoxData = textBoxValues[selectedProviderArray] || {};
+
+		let isProviderNull = selectedProviderArray;
+
+        if (!isProviderNull || !providerData[0]) continue; // or handle error
+
+        const dataTransferIn = parseInt(textBoxData.DataTransferIn, 10 );
+
+
+        const cores = parseInt(textBoxData.Cores, 10 );
+        const runTime = parseInt(textBoxData.RunTime, 10 );
+        const dataTransferOut = parseInt(textBoxData.DataTransferOut, 10 );
+
+        const jobPrice = 
+		 providerData[2].toString() * 10 + 
+          10 * providerData[5].toString() + 
+          (10 + 11) * providerData[3].toString();
+        
+        const jobPricee = parseInt(jobPrice.toString(), 10 );
+
+        const args = {
+          provider: selectedProviderArray,
+          priceBlockIndex: 0, // assuming this is static
+          cloudStorageID: [0], // assuming this is static
+          cachetype: [0], // assuming this is static
+          dataPricesSetBlockNum: [0], // assuming this is static
+          core: [1],
+          runTime: [10],
+          dataTransferOut: dataTransferOut || 0,
+          jobPrice: jobPricee,
+          workflowId: 0 // assuming this is static
+        };
+
+        try {
+          const padded = ethers.utils.hexZeroPad(0x00, 32);
+
+          // Convert args to the required types
+          const contractArgs = {
+            key: padded.toString(),
+            dataTransferIn: [dataTransferIn || 0],
+            args:
+              [
+                args.provider,
+                args.priceBlockIndex,
+                args.cloudStorageID,
+                args.cachetype,
+                args.dataPricesSetBlockNum,
+                args.core,
+                args.runTime,
+                args.dataTransferOut,
+                args.jobPrice,
+                args.workflowId
+              ],
+            storageDuration: [0], // assuming this is static
+            sourceCodeHash: [padded]
+          };
+      
+      console.log("key", contractArgs.key);
+      console.log("dataTransferIn", contractArgs.dataTransferIn);
+      console.log("args.provider", args.provider);
+      console.log("args.priceBlockIndex", args.priceBlockIndex);
+      console.log("args.cloudStorageID", args.cloudStorageID);
+      console.log("args.cachetype", args.cachetype);
+      console.log("args.dataPricesSetBlockNum", args.dataPricesSetBlockNum);
+      console.log("args.core", args.core);
+      console.log("args.runTime", args.runTime);
+      console.log("args.dataTransferOut", args.dataTransferOut);
+      console.log("args.jobPrice", args.jobPrice);
+      console.log("args.workflowId", args.workflowId);
+      
+      console.log("args", contractArgs.args);
+      console.log("storageDuration", contractArgs.storageDuration);
+      console.log("sourceCodeHash", contractArgs.sourceCodeHash);
+		  const result = await contract.submitJob(
+			contractArgs.key,
+			contractArgs.dataTransferIn,
+			contractArgs.args,
+			contractArgs.storageDuration,
+			contractArgs.sourceCodeHash
+		  ); // user's Metamask address
+		console.log(result);
+        } catch (error) {
+          console.error('Error submitting job for 0x06FFb2c253450680d8614524466740f9576ED93F', error);
+        }
+      
     }
   };
+
+  const getJobInfoHandler = async (provider, key, index, jobID) => {
+	setOperation('getJobInfoHandler');
+	setResultString('Waiting...');
+	try {
+	  // You need to convert index and jobID from string to their respective types
+	  const parsedIndex = parseInt(index, 10);
+	  const parsedJobID = parseInt(jobID, 10);
+	  console.log("provider", provider);
+	  console.log("key", key);
+	  console.log("parsedIndex", parsedIndex);
+	  console.log("parsedJobID", parsedJobID);
+	  let txt = await contract.getJobInfo(provider, key, parsedIndex, parsedJobID);
+	  setResultString(JSON.stringify(txt)); // Assuming you want to display the returned object as a string
+	} catch (error) {
+	  const errorMessage = error.message.toString();
+	  const match = errorMessage.match(/reason="([^"]*)"/);
+	  const extractedErrorMessage = match ? match[1] : errorMessage;
+	  setResultString(extractedErrorMessage);
+	}
+  };
+
+    const registerRequesterHandler = async (e) => {
+      e.preventDefault();
+      setOperation('registerRequesterHandler');
+      setResultString('Waiting...');
+      try {
+        const padded = ethers.utils.hexZeroPad(0x000, 32)
+        let txt = await contract.registerRequester(padded, "alper.alimoglu@gmail.com", "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu", "/ip4/79.123.177.145/tcp/4001/ipfs/QmWmZQnb8xh3gHf9ZFmVQC4mLEav3Uht5kHJxZtixG3rsf");
+        console.log("Returns:", txt.toString());
+        console.log("Returns:", txt);
+
+        setResultString(txt.toString());
+      } catch (error) {
+        const errorMessage = error.message.toString();
+        const match = errorMessage.match(/reason="([^"]*)"/);
+        const extractedErrorMessage = match ? match[1] : errorMessage;
+        setResultString(extractedErrorMessage);
+      }
+    };
+
 
   return (
     <div className={styles.walletCard}>
@@ -228,6 +292,15 @@ const handleTextBoxChange = (provider, name, value) => {
           Get
         </button>
         <div>{operation === 'doesProviderExistHandler' ? resultString : ''}</div>
+      </form>
+      <form onSubmit={doesRequesterExistHandler}>
+        <h3> Does Requester Exist </h3>
+        <p> Requester Address </p>
+        <input type='text' id='requester' className={styles.addressInput} />
+        <button type='submit' className={styles.button6}>
+          Get
+        </button>
+        <div>{operation === 'doesRequesterExistHandler' ? resultString : ''}</div>
       </form>
       <form onSubmit={getProvidersHandler}>
         <h3> Get Providers </h3>
@@ -268,6 +341,15 @@ const handleTextBoxChange = (provider, name, value) => {
   </button>
   <div>{operation === 'getJobInfoHandler' ? resultString : ''}</div>
 </form>
+<form onSubmit={registerRequesterHandler}>
+        <h3> Register Requester </h3>
+        <p> IPFS Hash </p>
+        <input type='text' id='ipfshash' className={styles.addressInput} />
+        <button type='submit' className={styles.button6}>
+          Request
+        </button>
+        <div>{operation === 'registerRequesterHandler' ? resultString : ''}</div>
+      </form>
     </div>
   );
 };
